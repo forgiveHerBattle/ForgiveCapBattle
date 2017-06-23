@@ -1,8 +1,16 @@
+////*********************************************
+////此JS文件负责：
+////	资源的加载
+////	JS文件的加载
+////	以及其他一次性操作
+////*********************************************
+////****分配游戏数据/资源
 var control = new Object();
 var initialize = new Object();
 var paint = new Object();
 var role = new Object();
-(function() { //初始化图片
+////****加载图片
+(function() {
 	//图片列表
 	var imgList = [
 		["img_cap", "img/cap.png"],
@@ -23,7 +31,8 @@ var role = new Object();
 		}
 	}
 })();
-(function() { //动态加载"control.js","paint.js"等js文件
+////****加载其他js文件
+(function() {
 	var obj = {};
 	var jsList = ["js/control.js", "js/paint.js", "js/role.js"];
 	/**
