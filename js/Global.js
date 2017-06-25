@@ -52,10 +52,7 @@ cap.speed = 256;
 function paint_brick(x, y) {
 	conv_bg_p.drawImage(brickImage,x, y, brickImage.width, brickImage.height);
 }
-//main函数
-var w = window;
-var then = Date.now();
-requestAnimationFrame = w.requestAnimationFrame || w.webkitRequestAnimationFrame || w.msRequestAnimationFrame || w.mozRequestAnimationFrame;
+//控制
 var keysDown = {};
 addEventListener("keydown", function(e) {
 	keysDown[e.keyCode] = true;
@@ -63,7 +60,6 @@ addEventListener("keydown", function(e) {
 addEventListener("keyup", function(e) {
 	delete keysDown[e.keyCode];
 }, false);
-//控制
 var update = function(modifier) {
 	if(37 in keysDown) { //left
 		cap.x -= cap.speed * modifier;
@@ -82,6 +78,10 @@ var update = function(modifier) {
 		nowH -= cap.speed * modifier;
 	}
 };
+//main函数
+var w = window;
+var then = Date.now();
+requestAnimationFrame = w.requestAnimationFrame || w.webkitRequestAnimationFrame || w.msRequestAnimationFrame || w.mozRequestAnimationFrame;
 var main = function() {
 	conv_p.clearRect(0, 0, canvW, canvH);
 	conv_bg_p.clearRect(0, 0, canvW, canvH);
@@ -92,7 +92,6 @@ var main = function() {
 	for(var i = 0; i < 22; i++) {
 		paint_brick(i * brickImage.width + nowW - canvW / 2, canvH - brickImage.height + nowH - canvH / 2);
 	}
-	move_rel();
 	requestAnimationFrame(main);
 	var now = Date.now();
 	var delta = now - then;
@@ -100,7 +99,6 @@ var main = function() {
 	then = now;
 };
 main();
-
 //鼠标事件(没用到)
 function gete(e) {
 	if(e.offsetX > canvW / 2) {
