@@ -5,3 +5,10 @@
 body{
 	position:fixed;overflow-y:hidden
 }
+.canv{
+	position: absolute;
+	z-index: 1;
+}
+.canv_bg{
+	position: absolute;
+}
