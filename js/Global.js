@@ -3,6 +3,7 @@ window.onload = function() {
 	//设置画布大小
 	document.body.scroll = "no";
 }
+//定义画布属性
 var canv = document.getElementById('canv');
 var canv_bg = document.getElementById('canv_bg');
 var canvW = screen.width * 0.8;
@@ -21,7 +22,7 @@ canv_bg.style.marginLeft = screen.width * 0.1;
 canv_bg.style.marginTop = screen.height * 0.025;
 var conv_p = canv.getContext('2d');
 var conv_bg_p = canv_bg.getContext('2d');
-//砖长宽
+//定义帽子
 var capImage = new Image();
 var capReady = false;
 capImage.onload = function() {
@@ -30,7 +31,7 @@ capImage.onload = function() {
 capImage.src = "img/cap.png";
 capImage.width = screen.width * 0.06;
 capImage.height = screen.width * 0.04;
-
+//定义砖头
 var brickImage = new Image();
 var brickReady = false;
 brickImage.onload = function() {
@@ -39,7 +40,7 @@ brickImage.onload = function() {
 brickImage.src = "img/砖.png";
 brickImage.width = screen.width * 0.06;
 brickImage.height = screen.width * 0.02;
-
+//定义背景
 var bgImage = new Image();
 bgImage.src = "img/background.jpg";
 var cap;
@@ -47,10 +48,11 @@ cap = new Object();
 cap.x = canvH / 2 + brickImage.width * 2;
 cap.y = canvH - brickImage.height* 2.8;
 cap.speed = 256;
-
+//画砖头的方法
 function paint_brick(x, y) {
 	conv_bg_p.drawImage(brickImage,x, y, brickImage.width, brickImage.height);
 }
+//main函数
 var w = window;
 var then = Date.now();
 requestAnimationFrame = w.requestAnimationFrame || w.webkitRequestAnimationFrame || w.msRequestAnimationFrame || w.mozRequestAnimationFrame;
@@ -99,14 +101,7 @@ var main = function() {
 };
 main();
 
-function move_rel() {
-	//if(cap.x)
-}
-
-function ooo() {
-}
-ooo();
-
+//鼠标事件(没用到)
 function gete(e) {
 	if(e.offsetX > canvW / 2) {
 		if(nowW > 0)
