@@ -1,5 +1,23 @@
 ////*********************************************
 ////此JS文件负责：
-////	来源于网络的其他角色位置、旋转等状态改变
-////	将来源于网络的其他角色图片状态传递给paint
+////	角色位置、动作等状态改变
 ////*********************************************
+(function() {
+
+    var Role = function(paint) {
+
+
+    }
+
+
+    /**
+     * @private
+     * 创建锤子
+     */
+    Role.prototype.__createHammer = function() {
+        var hammer = new Hammer();
+        this.hammer = hammer;
+    }
+
+    window.Role = Role;
+})();
