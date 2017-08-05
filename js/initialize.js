@@ -95,17 +95,6 @@
 	brickImage.src = "img/砖.png";
 	brickImage.width = canvW / 14;
 	brickImage.height = canvW / 42;
-
-	var cap;
-	cap = new Object();
-	cap.x = canvW + brickImage.width * 2;
-	cap.y = canvH - brickImage.height * 2.8;
-	cap.speed = 956;
-	//画砖头的方法
-	function paint_brick(x, y) {
-		conv_p.drawImage(brickImage, x, y, brickImage.width, brickImage.height);
-	}
-	//控制
 	var keysDown = {};
 	addEventListener("keydown", function(e) {
 		keysDown[e.keyCode] = true;
@@ -113,55 +102,86 @@
 	addEventListener("keyup", function(e) {
 		delete keysDown[e.keyCode];
 	}, false);
-	var update = function(modifier) {
-		if(37 in keysDown) { //left
-			if(cap.x > 0)
-				cap.x -= cap.speed * modifier;
-		}
-		if(39 in keysDown) { //right
-			if(cap.x <= gameW - capImage.width)
-				cap.x += cap.speed * modifier;
-		}
-		if(38 in keysDown) { //up
-			if(cap.y > 0)
-				cap.y -= cap.speed * modifier;
-		}
-		if(40 in keysDown) { //down
-			if(cap.y <= gameH - capImage.height)
-				cap.y += cap.speed * modifier;
+	var then = Date.now();
+	var allcap = {
+		cap: new Array(),
+		img: capImage,
+		draw: function(ctx) {
+			for(var i = 0; i < this.cap.length; i++) {
+				ctx.save();
+				ctx.translate(this.cap[i].x, this.cap[i].y);
+				//ctx.rotate(-Math.atan2(-this.cap[i].vy, this.cap[i].vx));
+				ctx.globalAlpha = this.cap[i].alpha;
+				ctx.drawImage(this.img, this.cap[i].x, this.cap[i].y, capImage.width, capImage.height);
+				ctx.restore();
+				ctx.globalAlpha = 1;
+			}
+		},
+		add: function(x, y, speed) {
+			this.cap[this.cap.length] = {
+				x: x,
+				y: y,
+				speed: speed,
+				alpha: 1
+			};
+		},
+		//控制
+		update: function(modifier) {
+			for(var i = 0; i < this.cap.length; i++) {
+				if(37 in keysDown) { //left
+					if(this.cap[i].x > 0)
+						this.cap[i].x -= this.cap[i].speed * modifier;
+				}
+				if(39 in keysDown) { //right
+					if(this.cap[i].x <= gameW - capImage.width)
+						this.cap[i].x += this.cap[i].speed * modifier;
+				}
+				if(38 in keysDown) { //up
+					if(this.cap[i].y > 0)
+						this.cap[i].y -= this.cap[i].speed * modifier;
+				}
+				if(40 in keysDown) { //down
+					if(this.cap[i].y <= gameH - capImage.height)
+						this.cap[i].y += this.cap[i].speed * modifier;
+				}
+			}
 		}
 	};
+	allcap.add(canvW + brickImage.width * 2, canvH - brickImage.height * 2.8, 926);
+	//画砖头的方法
+	function paint_brick(x, y) {
+		conv_p.drawImage(brickImage, x, y, brickImage.width, brickImage.height);
+	}
 	//main函数
 	var w = window;
-	var then = Date.now();
 	requestAnimationFrame = w.requestAnimationFrame || w.webkitRequestAnimationFrame || w.msRequestAnimationFrame || w.mozRequestAnimationFrame;
 	var main = function() {
 		var now = Date.now();
 		var delta = now - then;
-		update(delta / 1000);
+		allcap.update(delta / 1000);
 		then = now;
 		conv_p.clearRect(0, 0, gameW, gameH);
-		if(cap.x <= canvW * 2.5 && cap.x >= canvW * 0.5 || cap.y <= canvH * 2.5 && cap.y >= canvH * 0.5) {
-			conv_p.restore();
-			conv_p.save();
-			if(cap.x <= canvW * 2.5 && cap.x >= canvW * 0.5) {
-				conv_p.translate(-cap.x + canvW / 2, 0);
-			} else if(cap.y <= canvH * 2.5 && cap.y >= canvH * 0.5 && cap.x >= canvW * 2.5) {
-				conv_p.translate(-canvW * 2, 0);
-			}
-			if(cap.y <= canvH * 2.5 && cap.y >= canvH * 0.5) {
-				conv_p.translate(0, -cap.y + canvH / 2);
-			} else if(cap.x <= canvW * 2.5 && cap.x >= canvW * 0.5 && cap.y >= canvH * 2.5) {
-				conv_p.translate(0, -canvH * 2);
-			}
-		}
-		if(capReady) {
-			conv_p.drawImage(capImage, cap.x, cap.y, capImage.width, capImage.height);
-		}
+		allcap.draw(conv_p);
+		//		if(cap.x <= canvW * 2.5 && cap.x >= canvW * 0.5 || cap.y <= canvH * 2.5 && cap.y >= canvH * 0.5) {
+		//			conv_p.restore();
+		//			conv_p.save();
+		//			if(cap.x <= canvW * 2.5 && cap.x >= canvW * 0.5) {
+		//				conv_p.translate(-cap.x + canvW / 2, 0);
+		//			} else if(cap.y <= canvH * 2.5 && cap.y >= canvH * 0.5 && cap.x >= canvW * 2.5) {
+		//				conv_p.translate(-canvW * 2, 0);
+		//			}
+		//			if(cap.y <= canvH * 2.5 && cap.y >= canvH * 0.5) {
+		//				conv_p.translate(0, -cap.y + canvH / 2);
+		//			} else if(cap.x <= canvW * 2.5 && cap.x >= canvW * 0.5 && cap.y >= canvH * 2.5) {
+		//				conv_p.translate(0, -canvH * 2);
+		//			}
+		////		}
+		//		if(capReady) {
+		//			conv_p.drawImage(capImage, cap.x, cap.y, capImage.width, capImage.height);
+		//		}
 		for(var i = 0; i < 30; i++) {
 			paint_brick(i * brickImage.width, canvH - brickImage.height);
 		}
-
 		requestAnimationFrame(main);
 	};
 	main();
