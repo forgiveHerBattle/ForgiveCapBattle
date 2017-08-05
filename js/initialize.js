@@ -77,7 +77,16 @@
 	canv.style.marginLeft = screen.width * 0.15;
 	canv.style.marginTop = screen.height * 0.025;
 	var conv_p = canv.getContext('2d');
-	//定义帽子
+	//定义玩家的img
+	var playerImage = new Image();
+	var playerReady = false;
+	playerImage.onload = function() {
+		playerReady = true;
+	};
+	playerImage.src = "img/people.png";
+	playerImage.width = screen.width * 0.06;
+	playerImage.height = screen.width * 0.10;
+	//定义帽子的img
 	var capImage = new Image();
 	var capReady = false;
 	capImage.onload = function() {
@@ -86,7 +95,7 @@
 	capImage.src = "img/cap.png";
 	capImage.width = screen.width * 0.06;
 	capImage.height = screen.width * 0.04;
-	//定义砖头
+	//定义砖头的img
 	var brickImage = new Image();
 	var brickReady = false;
 	brickImage.onload = function() {
@@ -103,14 +112,76 @@
 		delete keysDown[e.keyCode];
 	}, false);
 	var then = Date.now();
+	var allplayer = {
+		player: new Array(),
+		img: playerImage,
+		draw: function(ctx) {
+			for(var i = 0; i < this.player.length; i++) {
+				ctx.save();
+				//ctx.translate(this.cap[i].x, this.cap[i].y);
+				//ctx.rotate(-Math.atan2(-this.cap[i].vy, this.cap[i].vx));
+				ctx.globalAlpha = this.player[i].alpha;
+				ctx.drawImage(this.img, this.player[i].x, this.player[i].y, playerImage.width, playerImage.height);
+				ctx.restore();
+				ctx.globalAlpha = 1;
+			}
+		},
+		add: function(x, y, speed) {
+			this.player[this.player.length] = {
+				x: x,
+				y: y,
+				speed: speed,
+				alpha: 1
+			};
+		},
+		//控制
+		update: function(modifier) {
+			conv_p.clearRect(0, 0, gameW, gameH);
+			for(var i = 0; i < this.player.length; i++) {
+				var move = this.player[i].speed * modifier;
+				if(37 in keysDown) { //left
+					if(this.player[i].x > 0)
+						this.player[i].x -= move;
+				}
+				if(39 in keysDown) { //right
+					if(this.player[i].x <= gameW - playerImage.width)
+						this.player[i].x += move;
+				}
+				if(38 in keysDown) { //up
+					if(this.player[i].y > 0)
+						this.player[i].y -= move;
+				}
+				if(40 in keysDown) { //down
+					if(this.player[i].y <= gameH - playerImage.height)
+						this.player[i].y += move;
+				}
+				if(90 in keysDown) { //lay cap
+					allcap.add(this.player[i].x, this.player[i].y + 10, 526);
+				}
+				if(this.player[i].x <= canvW * 2.5 && this.player[i].x >= canvW * 0.5 || this.player[i].y <= canvH * 2.5 && this.player[i].y >= canvH * 0.5) {
+					conv_p.restore();
+					conv_p.save();
+					if(this.player[i].x <= canvW * 2.5 && this.player[i].x >= canvW * 0.5) {
+						conv_p.translate(-this.player[i].x + canvW / 2, 0);
+					} else if(this.player[i].y <= canvH * 2.5 && this.player[i].y >= canvH * 0.5 && this.player[i].x >= canvW * 2.5) {
+						conv_p.translate(-canvW * 2, 0);
+					}
+					if(this.player[i].y <= canvH * 2.5 && this.player[i].y >= canvH * 0.5) {
+						conv_p.translate(0, -this.player[i].y + canvH / 2);
+					} else if(this.player[i].x <= canvW * 2.5 && this.player[i].x >= canvW * 0.5 && this.player[i].y >= canvH * 2.5) {
+						conv_p.translate(0, -canvH * 2);
+					}
+				}
+			}
+		}
+	};
 	var allcap = {
 		cap: new Array(),
 		img: capImage,
+		needtime: 40,
 		draw: function(ctx) {
 			for(var i = 0; i < this.cap.length; i++) {
 				ctx.save();
-				ctx.translate(this.cap[i].x, this.cap[i].y);
-				//ctx.rotate(-Math.atan2(-this.cap[i].vy, this.cap[i].vx));
 				ctx.globalAlpha = this.cap[i].alpha;
 				ctx.drawImage(this.img, this.cap[i].x, this.cap[i].y, capImage.width, capImage.height);
 				ctx.restore();
@@ -124,30 +195,9 @@
 				speed: speed,
 				alpha: 1
 			};
-		},
-		//控制
-		update: function(modifier) {
-			for(var i = 0; i < this.cap.length; i++) {
-				if(37 in keysDown) { //left
-					if(this.cap[i].x > 0)
-						this.cap[i].x -= this.cap[i].speed * modifier;
-				}
-				if(39 in keysDown) { //right
-					if(this.cap[i].x <= gameW - capImage.width)
-						this.cap[i].x += this.cap[i].speed * modifier;
-				}
-				if(38 in keysDown) { //up
-					if(this.cap[i].y > 0)
-						this.cap[i].y -= this.cap[i].speed * modifier;
-				}
-				if(40 in keysDown) { //down
-					if(this.cap[i].y <= gameH - capImage.height)
-						this.cap[i].y += this.cap[i].speed * modifier;
-				}
-			}
 		}
 	};
-	allcap.add(canvW + brickImage.width * 2, canvH - brickImage.height * 2.8, 926);
+	allplayer.add(gameW / 2, gameH / 2, 926);
 	//画砖头的方法
 	function paint_brick(x, y) {
 		conv_p.drawImage(brickImage, x, y, brickImage.width, brickImage.height);
@@ -158,32 +208,30 @@
 	var main = function() {
 		var now = Date.now();
 		var delta = now - then;
-		allcap.update(delta / 1000);
+		allplayer.update(delta / 1000);
 		then = now;
-		conv_p.clearRect(0, 0, gameW, gameH);
+		allplayer.draw(conv_p);
 		allcap.draw(conv_p);
-		//		if(cap.x <= canvW * 2.5 && cap.x >= canvW * 0.5 || cap.y <= canvH * 2.5 && cap.y >= canvH * 0.5) {
-		//			conv_p.restore();
-		//			conv_p.save();
-		//			if(cap.x <= canvW * 2.5 && cap.x >= canvW * 0.5) {
-		//				conv_p.translate(-cap.x + canvW / 2, 0);
-		//			} else if(cap.y <= canvH * 2.5 && cap.y >= canvH * 0.5 && cap.x >= canvW * 2.5) {
-		//				conv_p.translate(-canvW * 2, 0);
-		//			}
-		//			if(cap.y <= canvH * 2.5 && cap.y >= canvH * 0.5) {
-		//				conv_p.translate(0, -cap.y + canvH / 2);
-		//			} else if(cap.x <= canvW * 2.5 && cap.x >= canvW * 0.5 && cap.y >= canvH * 2.5) {
-		//				conv_p.translate(0, -canvH * 2);
-		//			}
-		////		}
-		//		if(capReady) {
-		//			conv_p.drawImage(capImage, cap.x, cap.y, capImage.width, capImage.height);
-		//		}
 		for(var i = 0; i < 30; i++) {
 			paint_brick(i * brickImage.width, canvH - brickImage.height);
+			paint_brick(i * brickImage.width + gameW / 4, canvH - brickImage.height + gameH / 4);
 		}
 		requestAnimationFrame(main);
 	};
 	main();
 	var Me = new Role(5, 3);
 })();
+//		if(cap.x <= canvW * 2.5 && cap.x >= canvW * 0.5 || cap.y <= canvH * 2.5 && cap.y >= canvH * 0.5) {
+//			conv_p.restore();
+//			conv_p.save();
+//			if(cap.x <= canvW * 2.5 && cap.x >= canvW * 0.5) {
+//				conv_p.translate(-cap.x + canvW / 2, 0);
+//			} else if(cap.y <= canvH * 2.5 && cap.y >= canvH * 0.5 && cap.x >= canvW * 2.5) {
+//				conv_p.translate(-canvW * 2, 0);
+//			}
+//			if(cap.y <= canvH * 2.5 && cap.y >= canvH * 0.5) {
+//				conv_p.translate(0, -cap.y + canvH / 2);
+//			} else if(cap.x <= canvW * 2.5 && cap.x >= canvW * 0.5 && cap.y >= canvH * 2.5) {
+//				conv_p.translate(0, -canvH * 2);
+//			}
+////		}
