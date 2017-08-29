@@ -130,7 +130,12 @@
 			this.player[this.player.length] = {
 				x: x,
 				y: y,
+				xw: x + playerImage.width,
+				yw: y + playerImage.height,
+				g: 2,
 				speed: speed,
+				jump: 0,
+				status: 0,
 				alpha: 1
 			};
 		},
@@ -139,6 +144,20 @@
 			conv_p.clearRect(0, 0, gameW, gameH);
 			for(var i = 0; i < this.player.length; i++) {
 				var move = this.player[i].speed * modifier;
+				//重力
+				if(this.player[i].y <= gameH - playerImage.height && this.player[i].status == 1) {
+					this.player[i].g += 0.2;
+					if(this.player[i].status == 1)
+						this.player[i].y += this.player[i].g*2;
+					else
+						this.player[i].y += this.player[i].g;
+				} else {
+					this.player[i].g = 2;
+					this.player[i].status = 0;
+				}
+				this.player[i].y -= this.player[i].jump;
+				if(this.player[i].jump > 0)
+					this.player[i].jump -= 1;
 				if(37 in keysDown) { //left
 					if(this.player[i].x > 0)
 						this.player[i].x -= move;
@@ -158,6 +177,12 @@
 				if(90 in keysDown) { //lay cap
 					allcap.add(this.player[i].x, this.player[i].y + 10, 526);
 				}
+				if(88 in keysDown) { //jump
+					if(this.player[i].status == 0) {
+						this.player[i].jump = 20;
+						this.player[i].status = 1;
+					}
+				}
 				if(this.player[i].x <= canvW * 2.5 && this.player[i].x >= canvW * 0.5 || this.player[i].y <= canvH * 2.5 && this.player[i].y >= canvH * 0.5) {
 					conv_p.restore();
 					conv_p.save();
@@ -171,14 +196,15 @@
 					} else if(this.player[i].x <= canvW * 2.5 && this.player[i].x >= canvW * 0.5 && this.player[i].y >= canvH * 2.5) {
 						conv_p.translate(0, -canvH * 2);
 					}
-				}
+				}				
+				this.player[i].xw=this.player[i].x + playerImage.width;
+				this.player[i].yw=this.player[i].y + playerImage.height;
 			}
 		}
 	};
 	var allcap = {
 		cap: new Array(),
 		img: capImage,
-		needtime: 40,
 		draw: function(ctx) {
 			for(var i = 0; i < this.cap.length; i++) {
 				ctx.save();
@@ -197,10 +223,45 @@
 			};
 		}
 	};
-	allplayer.add(gameW / 2, gameH / 2, 926);
-	//画砖头的方法
-	function paint_brick(x, y) {
-		conv_p.drawImage(brickImage, x, y, brickImage.width, brickImage.height);
+	allplayer.add(gameW / 2, gameH / 2-50, 1726);
+	//allplayer.add(gameW / 2 +100, gameH / 2 + 100, 726);
+	var allbrick = {
+		brick: new Array(),
+		img: brickImage,
+		draw: function(ctx) {
+			for(var i = 0; i < this.brick.length; i++) {
+				ctx.save();
+				ctx.globalAlpha = this.brick[i].alpha;
+				ctx.drawImage(this.img, this.brick[i].x, this.brick[i].y, brickImage.width, brickImage.height);
+				ctx.restore();
+				ctx.globalAlpha = 1;
+			}
+		},
+		add: function(x, y) {
+			this.brick[this.brick.length] = {
+				x: x,
+				y: y,
+				xw: x + brickImage.width,
+				yw: y + brickImage.height,
+				alpha: 1
+			};
+		},
+		update: function() {
+			for(var j = 0; j < allplayer.player.length; j++) {
+				for(var i = 0; i < this.brick.length; i++) {
+					if(allplayer.player[j].xw >= this.brick[i].x && allplayer.player[j].xw <= this.brick[i].xw && allplayer.player[j].yw >= this.brick[i].y && allplayer.player[j].yw <= this.brick[i].yw ||
+						allplayer.player[j].x >= this.brick[i].x && allplayer.player[j].x <= this.brick[i].xw && allplayer.player[j].yw >= this.brick[i].y && allplayer.player[j].yw <= this.brick[i].yw) {
+						//allplayer.player[j].y -= allplayer.player[j].g;
+						//allplayer.player[j].y += allplayer.player[j].jump;
+						allplayer.player[j].status = 0;
+					}
+				}
+			}
+		}
+	};
+	for(var i = 0; i < 30; i++) {
+		allbrick.add(i * brickImage.width, canvH - brickImage.height);
+		allbrick.add(i * brickImage.width + gameW / 4, canvH - brickImage.height + gameH / 4);
 	}
 	//main函数
 	var w = window;
@@ -208,14 +269,12 @@
 	var main = function() {
 		var now = Date.now();
 		var delta = now - then;
+		allbrick.update();
 		allplayer.update(delta / 1000);
 		then = now;
 		allplayer.draw(conv_p);
 		allcap.draw(conv_p);
-		for(var i = 0; i < 30; i++) {
-			paint_brick(i * brickImage.width, canvH - brickImage.height);
-			paint_brick(i * brickImage.width + gameW / 4, canvH - brickImage.height + gameH / 4);
-		}
+		allbrick.draw(conv_p);
 		requestAnimationFrame(main);
 	};
 	main();
