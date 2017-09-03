@@ -118,9 +118,10 @@
 		draw: function(ctx) {
 			for(var i = 0; i < this.player.length; i++) {
 				ctx.save();
-				//ctx.translate(this.cap[i].x, this.cap[i].y);
+				//ctx.translate(this.player[i].x, this.player[i].y);
 				//ctx.rotate(-Math.atan2(-this.cap[i].vy, this.cap[i].vx));
 				ctx.globalAlpha = this.player[i].alpha;
+				//ctx.rotate(45 * Math.PI / 180);
 				ctx.drawImage(this.img, this.player[i].x, this.player[i].y, playerImage.width, playerImage.height);
 				ctx.restore();
 				ctx.globalAlpha = 1;
@@ -132,7 +133,8 @@
 				y: y,
 				xw: x + playerImage.width,
 				yw: y + playerImage.height,
-				g: 2,
+				g: 3,
+				direction: 1,
 				speed: speed,
 				jump: 0,
 				status: 0,
@@ -149,7 +151,7 @@
 					this.player[i].g += 0.2;
 					this.player[i].y += this.player[i].g;
 				} else {
-					this.player[i].g = 2;
+					this.player[i].g = 3;
 					this.player[i].status = 0;
 				}
 				this.player[i].y -= this.player[i].jump;
@@ -162,29 +164,33 @@
 						this.player[i].x -= move;
 				}
 				if(39 in keysDown) { //right
-					if(this.player[i].x <= gameW - playerImage.width)
+					if(this.player[i].x <= gameW - playerImage.width) {
 						this.player[i].x += move;
+						this.player[i].direction = 1;
+					}
 				}
 				if(38 in keysDown) { //up
-					if(this.player[i].y > 0)
+					if(this.player[i].y > 0) {
 						this.player[i].y -= move;
+						this.player[i].direction = 2;
+					}
 				}
 				if(40 in keysDown) { //down
 					if(this.player[i].y <= gameH - playerImage.height)
 						this.player[i].y += move;
 				}
 				if(90 in keysDown) { //lay cap
-					allcap.add(this.player[i].x, this.player[i].y + 10, 526);
+					allcap.add(this.player[i].x, this.player[i].y + 30, 526);
 				}
 				if(88 in keysDown) { //jump
 					if(this.player[i].status == 0 || this.player[i].status == 2) {
 						this.player[i].jump = 20;
 						if(this.player[i].status == 0)
 							this.player[i].status = 1;
-						if(this.player[i].status == 2){
+						if(this.player[i].status == 2) {
 							this.player[i].g = 2;
 							this.player[i].status = 3;
-						}							
+						}
 					}
 				}
 				if(this.player[i].x <= canvW * 2.5 && this.player[i].x >= canvW * 0.5 || this.player[i].y <= canvH * 2.5 && this.player[i].y >= canvH * 0.5) {
@@ -222,9 +228,32 @@
 			this.cap[this.cap.length] = {
 				x: x,
 				y: y,
+				xw: x + capImage.width,
+				yw: y + capImage.height,
 				speed: speed,
+				g: 3,
+				jump: 20,
+				status: 0,
 				alpha: 1
 			};
+		},
+		update: function() {
+			for(var i = 0; i < this.cap.length; i++) {
+				//重力
+				if(this.cap[i].y <= gameH - capImage.height && this.cap[i].status != 0) {
+					this.cap[i].g += 0.2;
+					this.cap[i].y += this.cap[i].g;
+					this.cap[i].x += 6;
+				} else {
+					this.cap[i].g = 3;
+					this.cap[i].status = 0;
+				}
+				this.cap[i].y -= this.cap[i].jump;
+				if(this.cap[i].jump > 0)
+					this.cap[i].jump -= 1;
+				this.cap[i].xw = this.cap[i].x + capImage.width;
+				this.cap[i].yw = this.cap[i].y + capImage.height;
+			}
 		}
 	};
 	allplayer.add(gameW / 2, gameH / 2 - 50, 1726);
@@ -251,6 +280,22 @@
 			};
 		},
 		update: function() {
+			//cap
+			for(var j = 0; j < allcap.cap.length; j++) {
+				for(var i = 0; i < this.brick.length; i++) {
+					if(allcap.cap[j].xw >= this.brick[i].x && allcap.cap[j].xw <= this.brick[i].xw && allcap.cap[j].yw >= this.brick[i].y && allcap.cap[j].yw <= this.brick[i].yw && allcap.cap[j].status == 1 ||
+						allcap.cap[j].x >= this.brick[i].x && allcap.cap[j].x <= this.brick[i].xw && allcap.cap[j].yw >= this.brick[i].y && allcap.cap[j].yw <= this.brick[i].yw && allcap.cap[j].status == 1 ||
+						allcap.cap[j].xw >= this.brick[i].x && allcap.cap[j].xw <= this.brick[i].xw && allcap.cap[j].yw >= this.brick[i].y && allcap.cap[j].yw + allcap.cap[j].g <= this.brick[i].yw && allcap.cap[j].status == 1 ||
+						allcap.cap[j].x >= this.brick[i].x && allcap.cap[j].x <= this.brick[i].xw && allcap.cap[j].yw >= this.brick[i].y && allcap.cap[j].yw + allcap.cap[j].g <= this.brick[i].yw && allcap.cap[j].status == 1) {
+						allcap.cap[j].yw = this.brick[i].y;
+						allcap.cap[j].status = 0;
+						break;
+					} else {
+						allcap.cap[j].status = 1;
+					}
+				}
+			}
+			//player
 			for(var j = 0; j < allplayer.player.length; j++) {
 				for(var i = 0; i < this.brick.length; i++) {
 					if(allplayer.player[j].xw >= this.brick[i].x && allplayer.player[j].xw <= this.brick[i].xw && allplayer.player[j].yw >= this.brick[i].y && allplayer.player[j].yw <= this.brick[i].yw && allplayer.player[j].status >= 2 ||
@@ -259,6 +304,9 @@
 						allplayer.player[j].x >= this.brick[i].x && allplayer.player[j].x <= this.brick[i].xw && allplayer.player[j].yw >= this.brick[i].y && allplayer.player[j].yw + allplayer.player[j].g <= this.brick[i].yw && allplayer.player[j].status >= 2) {
 						allplayer.player[j].yw = this.brick[i].y;
 						allplayer.player[j].status = 0;
+						break;
+					} else {
+						allplayer.player[j].status = 4;
 					}
 				}
 			}
@@ -276,6 +324,7 @@
 		var delta = now - then;
 		allbrick.update();
 		allplayer.update(delta / 1000);
+		allcap.update();
 		then = now;
 		allplayer.draw(conv_p);
 		allcap.draw(conv_p);
